@@ -111,7 +111,8 @@ CREATE TABLE HOA_DON (
 	PhieuMuaHang INT NULL FOREIGN KEY REFERENCES PHIEU_MUA_HANG(MaPhieuMuaHang),
 	--tổng tiền sau khuyến mãi
     TongTien MONEY NOT NULL,
-	ThanhToan MONEY NOT NULL
+	ThanhToan MONEY NOT NULL,
+	TrangThaiThanhToan BIT DEFAULT 0
 );
 
 -- Tạo bảng CHI_TIET_HOA_DON
@@ -178,10 +179,3 @@ CREATE TABLE THONG_KE_SAN_PHAM (
 	SoLuongKhachHang INT,
 	PRIMARY KEY(NgayThongKe, MaSanPham)
 )
-
---cân nhắc: 
---sử dụng money hay decimal
---các type (khách hàng, km) nên để số hay ghi chữ ra
---thông báo có cần tạo bảng không?
---các biến check (boolean) đặt tên như thế nào?
-
