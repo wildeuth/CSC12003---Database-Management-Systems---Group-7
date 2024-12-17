@@ -1,97 +1,3 @@
--- Thủ tục tính tổng doanh thu hàng ngày
-CREATE OR ALTER PROCEDURE sp_TinhTongDoanhThuHangNgay
-    @Ngay DATETIME,
-	 @TongDThu MONEY OUTPUT
-AS
-BEGIN
-
-    SET NOCOUNT ON;
-	/*
-	Create table #DanhSachHoaDon (MaHoaDon INT, TongTien money);
-    INSERT INTO #DanhSachHoaDon (MaHoaDon, TongTien)
-    EXEC sp_LayDanhSachHoaDonTrongNgay '2024-11-01 14:00:00.000';
-
-    DECLARE @TongDThu MONEY = 0;
-
-    -- Tính tổng doanh thu
-    SELECT @TongDThu = SUM(TongTien) FROM @DanhSachHoaDon;
-
-    PRINT N'Tổng doanh thu trong ngày: ' + CAST(@TongDThu AS NVARCHAR(20));
-    RETURN @TongDThu;
-	*/
-	CREATE TABLE #DanhSachHoaDon (
-        MaHoaDon INT,
-        TongTien MONEY
-    );
-
-    -- Gọi procedure để lấy danh sách hoá đơn trong ngày
-    INSERT INTO #DanhSachHoaDon (MaHoaDon, TongTien)
-    EXEC sp_LayDanhSachHoaDonTrongNgay @Ngay;
-
-    -- Khởi tạo biến tổng doanh thu
-    DECLARE @Tong MONEY = 0;
-    DECLARE @CurrentTongTien MONEY
-
-    -- Con trỏ để lặp qua từng hoá đơn trong danh sách
-    DECLARE HoaDon_Cursor CURSOR FOR
-    SELECT TongTien FROM #DanhSachHoaDon;
-
-    -- Mở con trỏ
-    OPEN HoaDon_Cursor;
-
-    -- Lấy dòng đầu tiên
-    FETCH NEXT FROM HoaDon_Cursor INTO @CurrentTongTien;
-
-    -- Vòng lặp tính tổng doanh thu
-    WHILE @@FETCH_STATUS = 0
-    BEGIN
-        SET @Tong = @Tong + @CurrentTongTien;
-
-        -- Lấy dòng tiếp theo
-        FETCH NEXT FROM HoaDon_Cursor INTO @CurrentTongTien;
-    END;
-
-    -- Đóng và giải phóng con trỏ
-    CLOSE HoaDon_Cursor;
-    DEALLOCATE HoaDon_Cursor;
-
-    -- Trả kết quả tổng doanh thu
-    SET @TongDThu = @Tong;
-
-    -- Xoá bảng tạm
-    DROP TABLE #DanhSachHoaDon;
-END
-GO
-DECLARE @TongDThu MONEY;
-
-EXEC sp_TinhTongDoanhThuHangNgay @Ngay = '2024-11-01 14:00:00.000', @TongDThu = @TongDThu OUTPUT;
-
-PRINT 'Tổng doanh thu ngày 2024-06-10 là: ' + CAST(@TongDThu AS VARCHAR(20));
-
-exec sp_TinhTongDoanhThuHangNgay '2024-11-01 14:00:00.000',
-
--- Thủ tục lấy danh sách hoá đơn trong ngày
-CREATE OR ALTER PROCEDURE sp_LayDanhSachHoaDonTrongNgay
-    @Ngay DATETIME
-AS
-BEGIN
-    SET NOCOUNT ON;
-	-- Lấy danh sách phiếu mua sắm có ngày đặt = @Ngay
-	 -- Lấy danh sách hóa đơn trong ngày
-    SELECT HD.MaHoaDon
-    FROM HOA_DON AS HD WITH (READCOMMITTED, ROWLOCK)
-    JOIN PHIEU_MUA_SAM AS PMS WITH (READCOMMITTED, ROWLOCK)
-        ON HD.MaPhieuMuaSam = PMS.MaPhieuMuaSam
-    WHERE PMS.NgayDat = @Ngay;
-
-END
-GO
---Vì nó đã lock luôn rồi nên lúc insert dô là ko cập nhật được => ko lấy ra được những hóa đơn sau khi đã dùng sp này
-exec sp_LayDanhSachHoaDonTrongNgay @Ngay = '2024-11-01 14:00:00.000'
-
-
-
-
 -- Dữ liệu cho bảng PHAN_LOAI
 INSERT INTO PHAN_LOAI (Loai, DieuKien, GiaTri)
 VALUES 
@@ -202,3 +108,16 @@ INSERT INTO THONG_KE (NgayThongKe, TongDoanhThu, TongKhachHang)
 VALUES 
 ('2024-11-01', 135000, 2),
 ('2024-11-02', 50000, 1);
+
+
+-- Thủ tục thống kê số lượng khách hàng mua sản phẩm trong ngày:  sp_ThongKeKhachHangHangNgay
+DECLARE @TongKhachHang INT;
+EXEC sp_ThongKeKhachHangHangNgay @Ngay =  '2024-11-01 14:00:00.000', @Tong = @TongKhachHang OUTPUT;
+
+PRINT 'Tổng số lượng khách hàng: ' + CAST(@TongKhachHang AS NVARCHAR);
+
+---- Thủ tục: Lấy số lượng khách hàng đã mua sản phẩm: sp_LaySoLuongKhachHangMuaSanPham
+exec sp_LaySoLuongKhachHangMuaSanPham @Ngay = '2024-11-01 14:00:00.000'
+
+-- Thủ tục: Lấy danh sách sản pham đã bán trong ngày: sp_LayDanhSachSanPhamDaBan
+exec sp_LayDanhSachSanPhamDaBan '2024-11-01 14:00:00.000'
