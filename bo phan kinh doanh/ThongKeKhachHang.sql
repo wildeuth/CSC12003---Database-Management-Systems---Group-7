@@ -28,7 +28,6 @@ EXEC sp_ThongKeKhachHangHangNgay @Ngay =  '2024-11-01 14:00:00.000', @Tong = @To
 
 PRINT 'Tổng số lượng khách hàng: ' + CAST(@TongKhachHang AS NVARCHAR);
 
-
 -- Lấy số lượng khách hàng đã mua sản phẩm
 CREATE or alter PROCEDURE sp_LaySoLuongKhachHangMuaSanPham
     @Ngay DATETIME
@@ -70,15 +69,11 @@ BEGIN
 	set nocount on;
 
     -- Bảng tạm chứa danh sách hóa đơn
-    CREATE TABLE #DanhSachHoaDon (MaHoaDon INT);
+    CREATE TABLE #DanhSachHoaDon (MaHoaDon INT, TongTien decimal(18,2));
 
     -- Lấy danh sách hóa đơn trong ngày
-    INSERT INTO #DanhSachHoaDon (MaHoaDon)
+    INSERT INTO #DanhSachHoaDon (MaHoaDon,TongTien)
     EXEC sp_LayDanhSachHoaDonTrongNgay @Ngay;
-    -- Bước 1: Lấy danh sách hóa đơn trong ngày
-    --DECLARE @TableHoaDon TABLE (MaHoaDon INT);
-    --INSERT INTO @TableHoaDon (MaHoaDon)
-    select *from #DanhSachHoaDon
 
     -- Bước 2: Lấy chi tiết hóa đơn để xác định số lượng sản phẩm đã bán
     SELECT CTHD.MaSanPham, SUM(CTHD.SoLuong) AS SoLuong

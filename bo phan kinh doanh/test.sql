@@ -1,3 +1,22 @@
+-- Thủ tục chính: Thống kê số lượng khách hàng mua sản phẩm trong ngày:  sp_ThongKeKhachHangHangNgay
+DECLARE @TongKhachHang INT;
+EXEC sp_ThongKeKhachHangHangNgay @Ngay =  '2024-11-01 14:00:00.000', @Tong = @TongKhachHang OUTPUT;
+
+---- Thủ tục: Lấy số lượng khách hàng đã mua sản phẩm: sp_LaySoLuongKhachHangMuaSanPham
+exec sp_LaySoLuongKhachHangMuaSanPham @Ngay = '2024-11-01 14:00:00.000'
+
+-- Thủ tục: Lấy danh sách sản pham đã bán trong ngày: sp_LayDanhSachSanPhamDaBan
+exec sp_LayDanhSachSanPhamDaBan '2024-11-01 14:00:00.000'
+
+-- Thủ tục chính: Tính tổng doanh thu hàng ngày
+DECLARE @TongDThu DECIMAL(18, 2);
+
+EXEC sp_TinhTongDoanhThuHangNgay @Ngay = '2024-11-01 14:00:00.000', @TongDThu = @TongDThu OUTPUT;
+
+-- Thủ tục lấy danh sách hoá đơn trong ngày: sp_LayDanhSachHoaDonTrongNgay
+exec sp_LayDanhSachHoaDonTrongNgay @Ngay = '2024-11-01 14:00:00.000'
+
+
 -- Dữ liệu cho bảng PHAN_LOAI
 INSERT INTO PHAN_LOAI (Loai, DieuKien, GiaTri)
 VALUES 
@@ -65,32 +84,38 @@ VALUES
 -- Dữ liệu cho bảng PHIEU_MUA_SAM
 INSERT INTO PHIEU_MUA_SAM (MaKhachHang, NgayDat, LaOnline, SuDungPhieu)
 VALUES 
-(3, '2024-11-01 14:00:00.000', 1, 0),
-(2, '2024-11-01 14:00:00', 0, 1);
+(1, '2024-11-01 10:00:00.000', 1, 0),
+(2, '2024-11-01 10:00:00.000', 0, 1),
+(11, '2024-11-01 10:00:00.000', 1,0),
+(10, '2024-11-01 10:00:00.000',1,0),
+(9, '2024-11-01 10:00:00.000',1,0)
 
 -- Dữ liệu cho bảng CHI_TIET_PHIEU_MUA_SAM
 INSERT INTO CHI_TIET_PHIEU_MUA_SAM (MaPhieuMuaSam, MaSanPham, SoLuongDat)
 VALUES 
 (1, 1, 2),
 (1, 2, 1),
-(2, 3, 5);
+(2, 3, 5),
+(4,1,1),
+(5,1,3),
+(7,2,6)
+
 
 -- Dữ liệu cho bảng HOA_DON
 INSERT INTO HOA_DON (MaPhieuMuaSam, PhieuMuaHang, TrangThaiThanhToan, TongTien, ThanhToan)
 VALUES 
 (1, NULL, 1, 90000, 90000),
 (2, NULL, 1, 50000, 50000),
-(3,NULL,1,10000, 9000),
+(1,NULL,1,10000, 9000),
 (4,NULL,1,12000, 9000),
 (5,NULL,1,13000, 19000)
-
 
 -- Dữ liệu cho bảng CHI_TIET_HOA_DON
 INSERT INTO CHI_TIET_HOA_DON (MaHoaDon, MaSanPham, MaKhuyenMai, SoLuong, GiaBan, GiaSauKhuyenMai)
 VALUES 
 (1, 1, 1, 2, 30000, 24000),
-(1, 2, 1, 1, 45000, 38250);
-
+(1, 2, 1, 1, 45000, 38250),
+(2,1, 1, 3, 12000.0000, 12000.0000)
 -- Dữ liệu cho bảng PHIEU_DAT_HANG
 INSERT INTO PHIEU_DAT_HANG (MaNhaSanXuat, MaSanPham, SoLuongDat)
 VALUES 
@@ -110,14 +135,3 @@ VALUES
 ('2024-11-02', 50000, 1);
 
 
--- Thủ tục thống kê số lượng khách hàng mua sản phẩm trong ngày:  sp_ThongKeKhachHangHangNgay
-DECLARE @TongKhachHang INT;
-EXEC sp_ThongKeKhachHangHangNgay @Ngay =  '2024-11-01 14:00:00.000', @Tong = @TongKhachHang OUTPUT;
-
-PRINT 'Tổng số lượng khách hàng: ' + CAST(@TongKhachHang AS NVARCHAR);
-
----- Thủ tục: Lấy số lượng khách hàng đã mua sản phẩm: sp_LaySoLuongKhachHangMuaSanPham
-exec sp_LaySoLuongKhachHangMuaSanPham @Ngay = '2024-11-01 14:00:00.000'
-
--- Thủ tục: Lấy danh sách sản pham đã bán trong ngày: sp_LayDanhSachSanPhamDaBan
-exec sp_LayDanhSachSanPhamDaBan '2024-11-01 14:00:00.000'
