@@ -6,43 +6,6 @@ AS
 BEGIN
 
     SET NOCOUNT ON;
-/*
-	CREATE TABLE #DanhSachHoaDon (
-        MaHoaDon INT,
-        TongTien DECIMAL(18, 2)
-    );
-
-    -- Gọi procedure để lấy danh sách hoá đơn trong ngày
-    INSERT INTO #DanhSachHoaDon (MaHoaDon, TongTien)
-    EXEC sp_LayDanhSachHoaDonTrongNgay @Ngay;
-
-    -- Khởi tạo biến tổng doanh thu
-    DECLARE @Tong MONEY = 0;
-    DECLARE @CurrentTongTien MONEY
-
-    -- Con trỏ để lặp qua từng hoá đơn trong danh sách
-    DECLARE HoaDon_Cursor CURSOR FOR
-    SELECT TongTien FROM #DanhSachHoaDon;
-    -- Mở con trỏ
-    OPEN HoaDon_Cursor;
-    -- Lấy dòng đầu tiên
-    FETCH NEXT FROM HoaDon_Cursor INTO @CurrentTongTien;
-    -- Vòng lặp tính tổng doanh thu
-    WHILE @@FETCH_STATUS = 0
-    BEGIN
-        SET @Tong = @Tong + @CurrentTongTien;
-        -- Lấy dòng tiếp theo
-        FETCH NEXT FROM HoaDon_Cursor INTO @CurrentTongTien;
-    END;
-    -- Đóng và giải phóng con trỏ
-    CLOSE HoaDon_Cursor;
-    DEALLOCATE HoaDon_Cursor;
-    -- Trả kết quả tổng doanh thu
-    SET @TongDThu = @Tong;
-    -- Xoá bảng tạm
-    DROP TABLE #DanhSachHoaDon;
-	*/
-
 	 -- Initialize total revenue
     SET @TongDThu = 0;
 
@@ -87,6 +50,6 @@ BEGIN
 
 END
 GO
---Vì nó đã lock luôn rồi nên lúc insert dô là ko cập nhật được => ko lấy ra được những hóa đơn sau khi đã dùng sp này
+
 exec sp_LayDanhSachHoaDonTrongNgay @Ngay = '2024-11-01 14:00:00.000'
 
