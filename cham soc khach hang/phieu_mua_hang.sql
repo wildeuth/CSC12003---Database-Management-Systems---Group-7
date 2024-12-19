@@ -74,9 +74,8 @@ BEGIN
         PRINT N'Tặng phiếu mua hàng thành công cho tất cả khách hàng có sinh nhật trong tháng.'
     END TRY
     BEGIN CATCH
-        IF @@TRANCOUNT > 0 -- Chỉ rollback nếu giao dịch vẫn đang mở
-            ROLLBACK TRAN;
-        THROW; -- Kích hoạt lại lỗi ban đầu
+        ROLLBACK TRAN;
+        THROW;
     END CATCH
 END
 GO
