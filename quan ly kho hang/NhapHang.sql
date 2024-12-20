@@ -1,4 +1,4 @@
-USE QLST
+﻿USE QLST
 GO
 
 -- Stored Procedure: NhapHang
@@ -10,7 +10,7 @@ CREATE PROCEDURE NhapHang
 	
 AS
 BEGIN
-    SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+    SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
     BEGIN TRANSACTION;
 
     -- Exclusive lock for inserting into PHIEU_NHAN_HANG
@@ -32,48 +32,58 @@ CREATE PROCEDURE LayDanhSachDonDatHangDaNhan
     @NhaSanXuatID INT
 AS
 BEGIN
-    SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+    SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
     BEGIN TRANSACTION;
 
-    -- Retrieve orders and receipts
+    -- Biến để lưu số lượng còn lại
     DECLARE @RemainingQuantity INT;
+    DECLARE @SoLuongDat INT;
 
+    -- Con trỏ để duyệt danh sách đơn đặt hàng
     DECLARE OrdersCursor CURSOR FOR
-    SELECT pdh.MaSanPham, pdh.SoLuongDat, pnh.SoLuongNhan, pdh.DaNhanHang
+    SELECT pdh.SoLuongDat, pnh.SoLuongNhan
     FROM PHIEU_DAT_HANG pdh WITH (HOLDLOCK)
     JOIN PHIEU_NHAN_HANG pnh WITH (HOLDLOCK)
         ON pdh.MaSanPham = pnh.MaSanPham
-    WHERE pdh.MaSanPham = @MaSanPham AND pnh.MaNhaSanXuat = @NhaSanXuatID;
+    WHERE pdh.MaSanPham = @MaSanPham AND pnh.MaNhaSanXuat = @NhaSanXuatID
+        AND pdh.DaNhanHang = 0;
 
     OPEN OrdersCursor;
 
-    FETCH NEXT FROM OrdersCursor INTO @RemainingQuantity;
+    -- Lấy dữ liệu đầu tiên từ con trỏ
+    FETCH NEXT FROM OrdersCursor INTO @SoLuongDat, @RemainingQuantity;
     WHILE @@FETCH_STATUS = 0
     BEGIN
-        -- Process orders
-        IF @RemainingQuantity > 0
+        -- Kiểm tra và xử lý số lượng còn lại
+        IF @RemainingQuantity >= @SoLuongDat
         BEGIN
+            -- Cập nhật trạng thái đã nhận hàng
             UPDATE PHIEU_DAT_HANG
             SET DaNhanHang = 1
-            WHERE MaSanPham = @MaSanPham AND SoLuongDat <= @RemainingQuantity;
+            WHERE MaSanPham = @MaSanPham AND SoLuongDat = @SoLuongDat;
 
-            SET @RemainingQuantity = @RemainingQuantity - SoLuongDat;
+            -- Giảm số lượng còn lại
+            SET @RemainingQuantity = @RemainingQuantity - @SoLuongDat;
         END
         ELSE
         BEGIN
+            -- Nếu không đủ số lượng, rollback
             ROLLBACK TRANSACTION;
             PRINT 'Insufficient quantity for receipt.';
             RETURN;
         END
 
-        FETCH NEXT FROM OrdersCursor INTO @RemainingQuantity;
+        -- Lấy bản ghi tiếp theo từ con trỏ
+        FETCH NEXT FROM OrdersCursor INTO @SoLuongDat, @RemainingQuantity;
     END
 
+    -- Đóng và hủy con trỏ
     CLOSE OrdersCursor;
     DEALLOCATE OrdersCursor;
 
+    -- Hoàn tất giao dịch
     COMMIT TRANSACTION;
-END
+END;
 GO
 -- Stored Procedure: XuLyNhapHang
 CREATE PROCEDURE XuLyNhapHang
@@ -81,7 +91,7 @@ CREATE PROCEDURE XuLyNhapHang
     @NhaSanXuatID INT
 AS
 BEGIN
-    SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+    SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
     BEGIN TRANSACTION;
 
     -- Retrieve orders using LayDanhSachDonDatHangDaNhan

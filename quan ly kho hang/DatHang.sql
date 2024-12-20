@@ -1,45 +1,65 @@
-USE QLST
+﻿USE QLST
 GO
 
 CREATE PROCEDURE KiemTraHangTonCuaSanPham
     @MaSanPham INT,
     @Ngay DATE,
-    @QuyetDinh  INT OUT,
-    @SoLuongDat  INT OUT
+    @QuyetDinhDatHang BIT OUTPUT,
+    @SoLuongDat INT OUTPUT
 AS
 BEGIN
-    SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+    SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
     BEGIN TRANSACTION;
 
-    DECLARE @SoLuongTonKho INT, @SoLuongDaBan INT, @SLSPTD INT;
+    DECLARE @SoLuongMua INT, @SoLuongTon INT, @SLSPTD INT, @SoLuongConLai INT;
 
-    -- Read current stock and sales data
-    SELECT @SoLuongTonKho = SoLuongTonKhoHienTai, @SLSPTD = SLSPTD
+    -- Lấy thông tin tồn kho và sản phẩm tối đa
+    SELECT @SoLuongTon = SoLuongTonKhoHienTai, @SLSPTD = SoLuongSanPhamToiDa
     FROM SAN_PHAM WITH (HOLDLOCK)
     WHERE MaSanPham = @MaSanPham;
 
-    SELECT @SoLuongDaBan = SUM(SoLuongDat)
-    FROM CHI_TIET_PHIEU_MUA_SAM WITH (NOLOCK)
-    WHERE MaSanPham = @MaSanPham AND MaPhieuMuaSam IN (
-        SELECT MaPhieuMuaSam
-        FROM PHIEU_MUA_SAM WITH (NOLOCK)
-        WHERE CONVERT(DATE, NgayDat) = @Ngay
-    );
+    -- Cursor để duyệt qua các ngày và đơn hàng
+    DECLARE OrderCursor CURSOR FOR
+    SELECT SUM(SoLuong) AS SoLuongMua
+    FROM ChiTietPhieuMuaSam c
+    JOIN PhieuMuaSam p ON c.MaPhieuMuaSam = p.MaPhieuMuaSam
+    WHERE p.MaSanPham = @MaSanPham AND p.Ngay <= @Ngay
+    GROUP BY p.Ngay
+    ORDER BY p.Ngay DESC;
 
-    -- Check if order is needed
-    IF (@SoLuongTonKho - @SoLuongDaBan < 0.7 * @SLSPTD)
+    OPEN OrderCursor;
+
+    -- Duyệt qua từng đơn hàng
+    FETCH NEXT FROM OrderCursor INTO @SoLuongMua;
+    WHILE @@FETCH_STATUS = 0
     BEGIN
-        SET @SoLuongDat = @SLSPTD - (@SoLuongTonKho - @SoLuongDaBan);
-        SET @QuyetDinh = 1;
+        -- Tính toán số lượng còn lại
+        SET @SoLuongConLai = @SoLuongTon - @SoLuongMua;
+
+        -- Kiểm tra điều kiện đặt hàng
+        IF @SoLuongConLai < 0.7 * @SLSPTD
+        BEGIN
+            SET @QuyetDinhDatHang = 1;
+            SET @SoLuongDat = @SLSPTD - @SoLuongConLai;
+            BREAK; -- Dừng vòng lặp nếu thỏa mãn điều kiện
+        END
+
+        -- Lặp qua đơn hàng tiếp theo
+        FETCH NEXT FROM OrderCursor INTO @SoLuongMua;
     END
-    ELSE
+
+    -- Nếu không có điều kiện nào thỏa mãn
+    IF @@FETCH_STATUS <> 0
     BEGIN
+        SET @QuyetDinhDatHang = 0;
         SET @SoLuongDat = 0;
-        SET @QuyetDinh = 0;
     END
+
+    CLOSE OrderCursor;
+    DEALLOCATE OrderCursor;
 
     COMMIT TRANSACTION;
-END
+END;
 GO
 
 -- Stored Procedure: DatHangSanPham
@@ -49,7 +69,7 @@ CREATE PROCEDURE DatHangSanPham
     @SoLuongDat INT
 AS
 BEGIN
-    SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+    SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
     BEGIN TRANSACTION;
 
     -- Exclusive lock for inserting into PHIEU_DAT_HANG
@@ -65,7 +85,7 @@ CREATE PROCEDURE KiemTraVaDatHang
 	@NgayDat DaTE
 AS
 BEGIN
-    SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+    SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
     BEGIN TRANSACTION;
 
     DECLARE @QuyetDinh INT, @SoLuongDat INT;
