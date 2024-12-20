@@ -1,4 +1,5 @@
 -- Thủ tục thống kê số lượng khách hàng mua sản phẩm trong ngày
+go
 CREATE OR ALTER PROCEDURE sp_ThongKeKhachHangHangNgay
     @Ngay DATETIME,
 	@Tong INT output
@@ -37,6 +38,7 @@ DECLARE @TongKhachHang INT;
 EXEC sp_ThongKeKhachHangHangNgay @Ngay =  '2024-11-01 14:00:00.000', @Tong = @TongKhachHang OUTPUT;
 
 -- Lấy số lượng khách hàng đã mua sản phẩm
+go
 CREATE or alter PROCEDURE sp_LaySoLuongKhachHangMuaSanPham
     @Ngay DATETIME
 AS
@@ -78,10 +80,12 @@ BEGIN
     END CATCH;
 
 END;
+go
 
 exec sp_LaySoLuongKhachHangMuaSanPham @Ngay = '2024-11-01 14:00:00.000'
 
 --Thủ tục: Lấy danh sách sản pham đã bán trong ngày: sp_LayDanhSachSanPhamDaBan
+go
 CREATE OR ALTER PROCEDURE sp_LayDanhSachSanPhamDaBan
     @Ngay DATETIME
 AS
