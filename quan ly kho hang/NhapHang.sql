@@ -42,8 +42,8 @@ BEGIN
     -- Con trỏ để duyệt danh sách đơn đặt hàng
     DECLARE OrdersCursor CURSOR FOR
     SELECT pdh.SoLuongDat, pnh.SoLuongNhan
-    FROM PHIEU_DAT_HANG pdh WITH (HOLDLOCK)
-    JOIN PHIEU_NHAN_HANG pnh WITH (HOLDLOCK)
+    FROM PHIEU_DAT_HANG pdh
+    JOIN PHIEU_NHAN_HANG pnh 
         ON pdh.MaSanPham = pnh.MaSanPham
     WHERE pdh.MaSanPham = @MaSanPham AND pnh.MaNhaSanXuat = @NhaSanXuatID
         AND pdh.DaNhanHang = 0;

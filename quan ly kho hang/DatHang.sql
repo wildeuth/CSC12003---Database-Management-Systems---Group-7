@@ -21,7 +21,7 @@ BEGIN
 
     -- Lấy số lượng sản phẩm tối đa
     SELECT @SLSPTD = SoLuongSanPhamToiDa, @SoLuongTon = SoLuongTonKhoHienTai
-    FROM SAN_PHAM WITH (HOLDLOCK)
+    FROM SAN_PHAM 
     WHERE MaSanPham = @MaSanPham;
 
     -- Kiểm tra điều kiện đặt hàng
