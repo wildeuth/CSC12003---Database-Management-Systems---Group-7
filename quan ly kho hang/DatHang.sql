@@ -11,52 +11,32 @@ BEGIN
     SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
     BEGIN TRANSACTION;
 
-    DECLARE @SoLuongMua INT, @SoLuongTon INT, @SLSPTD INT, @SoLuongConLai INT;
+    DECLARE @SoLuongMua INT, @SLSPTD INT, @SoLuongTon INT, @SoLuongConLai INT;
 
-    -- Lấy thông tin tồn kho và sản phẩm tối đa
-    SELECT @SoLuongTon = SoLuongTonKhoHienTai, @SLSPTD = SoLuongSanPhamToiDa
+    -- Tìm số lượng mua trong ngày
+    SELECT @SoLuongMua = SUM(SoLuong)
+    FROM ChiTietPhieuMuaSam c
+    JOIN PhieuMuaSam p ON c.MaPhieuMuaSam = p.MaPhieuMuaSam
+    WHERE p.MaSanPham = @MaSanPham AND p.Ngay = @Ngay;
+
+    -- Lấy số lượng sản phẩm tối đa
+    SELECT @SLSPTD = SoLuongSanPhamToiDa, @SoLuongTon = SoLuongTonKhoHienTai
     FROM SAN_PHAM WITH (HOLDLOCK)
     WHERE MaSanPham = @MaSanPham;
 
-    -- Cursor để duyệt qua các ngày và đơn hàng
-    DECLARE OrderCursor CURSOR FOR
-    SELECT SUM(SoLuong) AS SoLuongMua
-    FROM ChiTietPhieuMuaSam c
-    JOIN PhieuMuaSam p ON c.MaPhieuMuaSam = p.MaPhieuMuaSam
-    WHERE p.MaSanPham = @MaSanPham AND p.Ngay <= @Ngay
-    GROUP BY p.Ngay
-    ORDER BY p.Ngay DESC;
+    -- Kiểm tra điều kiện đặt hàng
+    SET @SoLuongConLai = @SoLuongTon - @SoLuongMua;
 
-    OPEN OrderCursor;
-
-    -- Duyệt qua từng đơn hàng
-    FETCH NEXT FROM OrderCursor INTO @SoLuongMua;
-    WHILE @@FETCH_STATUS = 0
+    IF @SoLuongConLai < 0.7 * @SLSPTD AND @SoLuongMua > 0.1 * @SLSPTD
     BEGIN
-        -- Tính toán số lượng còn lại
-        SET @SoLuongConLai = @SoLuongTon - @SoLuongMua;
-
-        -- Kiểm tra điều kiện đặt hàng
-        IF @SoLuongConLai < 0.7 * @SLSPTD
-        BEGIN
-            SET @QuyetDinhDatHang = 1;
-            SET @SoLuongDat = @SLSPTD - @SoLuongConLai;
-            BREAK; -- Dừng vòng lặp nếu thỏa mãn điều kiện
-        END
-
-        -- Lặp qua đơn hàng tiếp theo
-        FETCH NEXT FROM OrderCursor INTO @SoLuongMua;
+        SET @QuyetDinhDatHang = 1;
+        SET @SoLuongDat = @SLSPTD - @SoLuongConLai;
     END
-
-    -- Nếu không có điều kiện nào thỏa mãn
-    IF @@FETCH_STATUS <> 0
+    ELSE
     BEGIN
         SET @QuyetDinhDatHang = 0;
         SET @SoLuongDat = 0;
     END
-
-    CLOSE OrderCursor;
-    DEALLOCATE OrderCursor;
 
     COMMIT TRANSACTION;
 END;
