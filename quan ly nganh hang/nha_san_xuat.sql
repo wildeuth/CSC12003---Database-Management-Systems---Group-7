@@ -28,12 +28,12 @@ BEGIN
         COMMIT TRAN
     END TRY
     BEGIN CATCH
-        IF @@TRANCOUNT > 0 -- Chỉ rollback nếu giao dịch vẫn đang mở
-            ROLLBACK TRAN
+        ROLLBACK TRAN;
         THROW
     END CATCH
 END
 GO
+
 
 -- Cập nhật nhà sản xuất
 CREATE OR ALTER PROCEDURE CapNhatNhaSanXuat
@@ -41,7 +41,7 @@ CREATE OR ALTER PROCEDURE CapNhatNhaSanXuat
     @TenNhaSanXuat NVARCHAR(50)
 AS
 BEGIN
-    BEGIN TRAN
+    BEGIN TRAN;
     BEGIN TRY
         -- Thiết lập mức cô lập Repeatable Read
         SET TRANSACTION ISOLATION LEVEL REPEATABLE READ
@@ -69,12 +69,11 @@ BEGIN
 
         PRINT N'Cập nhật nhà sản xuất thành công.'
         
-        COMMIT TRAN
+        COMMIT TRAN;
     END TRY
     BEGIN CATCH
-        IF @@TRANCOUNT > 0 -- Chỉ rollback nếu giao dịch vẫn đang mở
-            ROLLBACK TRAN
-        THROW -- Kích hoạt lại lỗi ban đầu
+        ROLLBACK TRAN;
+        THROW;
     END CATCH
 END
 GO
@@ -112,9 +111,8 @@ BEGIN
         COMMIT TRAN
     END TRY
     BEGIN CATCH
-        IF @@TRANCOUNT > 0 -- Chỉ rollback nếu giao dịch vẫn đang mở
-            ROLLBACK TRAN
-        THROW -- Kích hoạt lại lỗi ban đầu
+        ROLLBACK TRAN;
+        THROW
     END CATCH
 END
 GO

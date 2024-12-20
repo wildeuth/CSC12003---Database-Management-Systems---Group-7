@@ -1,43 +1,55 @@
-
-
 -- Thủ tục tính tổng doanh thu hàng ngày
 CREATE OR ALTER PROCEDURE sp_TinhTongDoanhThuHangNgay
-    @Ngay DATE
+    @Ngay DATETIME,
+	 @TongDThu  DECIMAL(18, 2) OUTPUT
 AS
 BEGIN
+
     SET NOCOUNT ON;
+	 -- Initialize total revenue
+    SET @TongDThu = 0;
 
-    DECLARE @TongDThu MONEY = 0;
-
-    -- Lấy danh sách hoá đơn trong ngày
-    DECLARE @DanhSachHoaDon TABLE (
+    CREATE TABLE #DanhSachHoaDon (
         MaHoaDon INT,
-        TongTien MONEY
+        TongTien DECIMAL(18, 2)
     );
 
-    INSERT INTO @DanhSachHoaDon (MaHoaDon, TongTien)
+    INSERT INTO #DanhSachHoaDon
     EXEC sp_LayDanhSachHoaDonTrongNgay @Ngay;
 
-    -- Tính tổng doanh thu
-    SELECT @TongDThu = SUM(TongTien) FROM @DanhSachHoaDon;
+    -- Calculate total revenue
+    SELECT @TongDThu = SUM(TongTien)
+    FROM #DanhSachHoaDon;
 
-    PRINT N'Tổng doanh thu trong ngày: ' + CAST(@TongDThu AS NVARCHAR(20));
-    RETURN @TongDThu;
+    -- Drop temporary table
+    DROP TABLE #DanhSachHoaDon;
+
+    -- Return result
+    PRINT 'Total revenue of '+  CAST(@Ngay AS NVARCHAR(20))+' is ' + CAST(@TongDThu AS NVARCHAR(50));
+
 END
 GO
+DECLARE @TongDThu DECIMAL(18, 2);
+
+EXEC sp_TinhTongDoanhThuHangNgay @Ngay = '2024-11-01 14:00:00.000', @TongDThu = @TongDThu OUTPUT;
+
 
 -- Thủ tục lấy danh sách hoá đơn trong ngày
 CREATE OR ALTER PROCEDURE sp_LayDanhSachHoaDonTrongNgay
-    @Ngay DATE
+    @Ngay DATETIME
 AS
 BEGIN
     SET NOCOUNT ON;
-
-    SELECT HD.MaHoaDon, HD.TongTien
-    FROM PHIEU_MUA_SAM PMS
-    INNER JOIN HOA_DON HD ON PMS.MaPhieu = HD.MaPhieu
+	-- Lấy danh sách phiếu mua sắm có ngày đặt = @Ngay
+	 -- Lấy danh sách hóa đơn trong ngày
+    SELECT HD.MaHoaDon,hd.TongTien
+    FROM HOA_DON AS HD WITH (READCOMMITTED, ROWLOCK)
+    JOIN PHIEU_MUA_SAM AS PMS WITH (READCOMMITTED, ROWLOCK)
+        ON HD.MaPhieuMuaSam = PMS.MaPhieuMuaSam
     WHERE PMS.NgayDat = @Ngay;
+
 END
 GO
 
--- Thủ tục lấy danh sách sản phẩm đã bán kèm số lượng
+exec sp_LayDanhSachHoaDonTrongNgay @Ngay = '2024-11-01 14:00:00.000'
+

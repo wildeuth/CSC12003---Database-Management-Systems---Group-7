@@ -53,9 +53,8 @@ BEGIN
         COMMIT TRAN
     END TRY
     BEGIN CATCH
-        IF @@TRANCOUNT > 0 -- Chỉ rollback nếu giao dịch vẫn đang mở
-            ROLLBACK TRAN
-        THROW -- Kích hoạt lại lỗi ban đầu
+        ROLLBACK TRAN;
+        THROW
     END CATCH
 END
 GO
@@ -133,9 +132,8 @@ BEGIN
         COMMIT TRAN
     END TRY
     BEGIN CATCH
-        IF @@TRANCOUNT > 0 -- Chỉ rollback nếu giao dịch vẫn đang mở
-            ROLLBACK TRAN
-        THROW -- Kích hoạt lại lỗi ban đầu
+        ROLLBACK TRAN;
+        THROW
     END CATCH
 END
 GO
@@ -167,9 +165,8 @@ BEGIN
         COMMIT TRAN
     END TRY
     BEGIN CATCH
-        IF @@TRANCOUNT > 0 -- Chỉ rollback nếu giao dịch vẫn đang mở
-            ROLLBACK TRAN
-        THROW -- Kích hoạt lại lỗi ban đầu
+        ROLLBACK TRAN;
+        THROW
     END CATCH
 END
 GO

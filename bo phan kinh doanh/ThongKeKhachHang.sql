@@ -1,65 +1,89 @@
 -- Thủ tục thống kê số lượng khách hàng mua sản phẩm trong ngày
 CREATE OR ALTER PROCEDURE sp_ThongKeKhachHangHangNgay
-    @Ngay DATE
+    @Ngay DATETIME,
+	@Tong INT output
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @Tong INT = 0;
-
-    -- Lấy danh sách sản phẩm đã bán và số lượng khách hàng
-    DECLARE @DanhSachSanPham TABLE (
-        MaSanPham INT,
-        SoLuongKhachHang INT
-    );
-
-    INSERT INTO @DanhSachSanPham (MaSanPham, SoLuongKhachHang)
+	
+    -- Bước 1: Lấy số lượng khách hàng của từng sản phẩm
+    Create table #TableSoLuongKhachHang (MaSanPham INT, SoLuongKhachHang INT);
+    INSERT INTO #TableSoLuongKhachHang (MaSanPham, SoLuongKhachHang)
     EXEC sp_LaySoLuongKhachHangMuaSanPham @Ngay;
 
-    -- Tính tổng số lượng khách hàng mua sản phẩm
-    SELECT @Tong = SUM(SoLuongKhachHang) FROM @DanhSachSanPham;
+    -- Bước 2: Tính tổng số lượng khách hàng
+    SELECT @Tong = SUM(SoLuongKhachHang)
+    FROM #TableSoLuongKhachHang;
 
-    PRINT N'Tổng số lượng khách hàng mua sản phẩm trong ngày: ' + CAST(@Tong AS NVARCHAR(10));
-    RETURN @Tong;
+    -- Bước 3: Trả kết quả
+    SELECT @Tong AS TongSoLuongKhachHang;
+
+	drop table #TableSoLuongKhachHang
 END
 GO
 
+DECLARE @TongKhachHang INT;
+EXEC sp_ThongKeKhachHangHangNgay @Ngay =  '2024-11-01 14:00:00.000', @Tong = @TongKhachHang OUTPUT;
 
--- Thủ tục lấy số lượng khách hàng mua từng sản phẩm
-CREATE OR ALTER PROCEDURE sp_LaySoLuongKhachHangMuaSanPham
-    @Ngay DATE
+PRINT 'Tổng số lượng khách hàng: ' + CAST(@TongKhachHang AS NVARCHAR);
+
+-- Lấy số lượng khách hàng đã mua sản phẩm
+CREATE or alter PROCEDURE sp_LaySoLuongKhachHangMuaSanPham
+    @Ngay DATETIME
 AS
 BEGIN
     SET NOCOUNT ON;
+	CREATE TABLE #DanhSachSanPham (MaSanPham INT);
 
-    DECLARE @DanhSachSanPham TABLE (
-        MaSanPham INT,
-        SoLuongKhachHang INT
-    );
+    -- Lấy danh sách sản phẩm đã bán
+    INSERT INTO #DanhSachSanPham (MaSanPham)
+    SELECT DISTINCT CTHD.MaSanPham
+    FROM CHI_TIET_HOA_DON AS CTHD WITH (READCOMMITTED, ROWLOCK)
+    INNER JOIN HOA_DON AS HD
+        ON CTHD.MaHoaDon = HD.MaHoaDon
+    INNER JOIN PHIEU_MUA_SAM AS PMS
+        ON HD.MaPhieuMuaSam = PMS.MaPhieuMuaSam
+    WHERE PMS.NgayDat = @Ngay;
 
-    INSERT INTO @DanhSachSanPham (MaSanPham, SoLuongKhachHang)
-    SELECT DISTINCT CT.MaSanPham, COUNT(DISTINCT PMS.MaKhachHang) AS SoLuongKhachHang
-    FROM CHI_TIET_PHIEU_MUA_SAM CT
-    INNER JOIN PHIEU_MUA_SAM PMS ON CT.MaPhieu = PMS.MaPhieu
-    WHERE PMS.NgayDat = @Ngay
-    GROUP BY CT.MaSanPham;
+    -- Đếm số lượng khách hàng của từng sản phẩm
+    SELECT SP.MaSanPham, COUNT(DISTINCT PMS.MaKhachHang) AS SoLuongKhachHang
+    FROM PHIEU_MUA_SAM AS PMS WITH (READCOMMITTED, ROWLOCK)
+    INNER JOIN CHI_TIET_PHIEU_MUA_SAM AS CTPMS WITH (READCOMMITTED, ROWLOCK)
+        ON PMS.MaPhieuMuaSam = CTPMS.MaPhieuMuaSam
+    INNER JOIN #DanhSachSanPham AS SP
+        ON CTPMS.MaSanPham = SP.MaSanPham
+    GROUP BY SP.MaSanPham;
 
-    SELECT * FROM @DanhSachSanPham;
-END
-GO
+    DROP TABLE #DanhSachSanPham;
 
+END;
 
+exec sp_LaySoLuongKhachHangMuaSanPham @Ngay = '2024-11-01 14:00:00.000'
 
+--Thủ tục: Lấy danh sách sản pham đã bán trong ngày: sp_LayDanhSachSanPhamDaBan
 CREATE OR ALTER PROCEDURE sp_LayDanhSachSanPhamDaBan
-    @Ngay DATE
+    @Ngay DATETIME
 AS
 BEGIN
-    SET NOCOUNT ON;
+	set nocount on;
 
-    SELECT CT.MaSanPham, SUM(CT.SoLuong) AS SoLuong
-    FROM HOA_DON HD
-    INNER JOIN CHI_TIET_HOA_DON CT ON HD.MaHoaDon = CT.MaHoaDon
-    WHERE HD.NgayLap = @Ngay
-    GROUP BY CT.MaSanPham;
+    -- Bảng tạm chứa danh sách hóa đơn
+    CREATE TABLE #DanhSachHoaDon (MaHoaDon INT, TongTien decimal(18,2));
+
+    -- Lấy danh sách hóa đơn trong ngày
+    INSERT INTO #DanhSachHoaDon (MaHoaDon,TongTien)
+    EXEC sp_LayDanhSachHoaDonTrongNgay @Ngay;
+
+    -- Bước 2: Lấy chi tiết hóa đơn để xác định số lượng sản phẩm đã bán
+    SELECT CTHD.MaSanPham, SUM(CTHD.SoLuong) AS SoLuong
+    FROM CHI_TIET_HOA_DON CTHD WITH (READCOMMITTED, ROWLOCK) -- Share Lock khi đọc chi tiết hóa đơn
+    INNER JOIN #DanhSachHoaDon HD
+        ON CTHD.MaHoaDon = HD.MaHoaDon
+    GROUP BY CTHD.MaSanPham;
+
+	drop table #DanhSachHoaDon
 END
 GO
+
+exec sp_LayDanhSachSanPhamDaBan '2024-11-01 14:00:00.000'

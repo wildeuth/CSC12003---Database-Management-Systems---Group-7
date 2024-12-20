@@ -48,7 +48,11 @@ BEGIN
             -- Thêm chi tiết khuyến mãi
             IF @LoaiKhuyenMai = 'Flash'
             BEGIN
-                IF NOT EXISTS (SELECT 1 FROM CHI_TIET_KHUYEN_MAI_FLASH WHERE MaKhuyenMai = @MaKhuyenMai AND MaSanPham = @MaSanPham)
+                IF NOT EXISTS (
+                    SELECT 1 
+                    FROM CHI_TIET_KHUYEN_MAI_FLASH WITH (UPDLOCK) -- Khóa UPDLOCK để ngăn cập nhật đồng thời
+                    WHERE MaKhuyenMai = @MaKhuyenMai AND MaSanPham = @MaSanPham
+                )
                 BEGIN
                     INSERT INTO CHI_TIET_KHUYEN_MAI_FLASH WITH (XLOCK) -- Sử dụng XLOCK để ngăn cập nhật đồng thời
                     VALUES (@MaKhuyenMai, @MaSanPham, @SoLuongConLai, @GiaTriKhuyenMai)
@@ -57,18 +61,28 @@ BEGIN
             END
             ELSE IF @LoaiKhuyenMai = 'Combo'
             BEGIN
-                IF NOT EXISTS (SELECT 1 FROM CHI_TIET_KHUYEN_MAI_COMBO WHERE MaKhuyenMai = @MaKhuyenMai AND ((MaSanPham1 = @MaSanPham AND MaSanPham2 = @MaSanPham2) OR (MaSanPham1 = @MaSanPham2 AND MaSanPham2 = @MaSanPham)))
+                IF NOT EXISTS (
+                    SELECT 1 
+                    FROM CHI_TIET_KHUYEN_MAI_COMBO WITH (UPDLOCK) -- Khóa UPDLOCK để ngăn cập nhật đồng thời
+                    WHERE MaKhuyenMai = @MaKhuyenMai AND 
+                        ((MaSanPham1 = @MaSanPham AND MaSanPham2 = @MaSanPham2) OR 
+                        (MaSanPham1 = @MaSanPham2 AND MaSanPham2 = @MaSanPham))
+                )
                 BEGIN
-                    INSERT INTO CHI_TIET_KHUYEN_MAI_COMBO WITH (XLOCK)
+                    INSERT INTO CHI_TIET_KHUYEN_MAI_COMBO WITH (XLOCK) -- Sử dụng XLOCK để ngăn cập nhật đồng thời
                     VALUES (@MaKhuyenMai, @MaSanPham, @MaSanPham2, @SoLuongConLai, @GiaTriKhuyenMai)
                     SET @RowsInserted = @RowsInserted + @@ROWCOUNT
                 END
             END
             ELSE IF @LoaiKhuyenMai = 'Member'
             BEGIN
-                IF NOT EXISTS (SELECT 1 FROM CHI_TIET_KHUYEN_MAI_MEMBER WHERE MaKhuyenMai = @MaKhuyenMai AND MaSanPham = @MaSanPham AND LoaiKhachHang = @LoaiKhachHang)
+                IF NOT EXISTS (
+                    SELECT 1 
+                    FROM CHI_TIET_KHUYEN_MAI_MEMBER WITH (UPDLOCK) -- Khóa UPDLOCK để ngăn cập nhật đồng thời
+                    WHERE MaKhuyenMai = @MaKhuyenMai AND MaSanPham = @MaSanPham AND LoaiKhachHang = @LoaiKhachHang
+                )
                 BEGIN
-                    INSERT INTO CHI_TIET_KHUYEN_MAI_MEMBER WITH (XLOCK)
+                    INSERT INTO CHI_TIET_KHUYEN_MAI_MEMBER WITH (XLOCK) -- Sử dụng XLOCK để ngăn cập nhật đồng thời
                     VALUES (@MaKhuyenMai, @MaSanPham, @LoaiKhachHang, @SoLuongConLai, @GiaTriKhuyenMai)
                     SET @RowsInserted = @RowsInserted + @@ROWCOUNT
                 END
@@ -85,10 +99,11 @@ BEGIN
         -- Commit giao dịch
         COMMIT TRAN
     END TRY
-    BEGIN CATCH
-        IF @@TRANCOUNT > 0 -- Chỉ rollback nếu giao dịch vẫn đang mở
-            ROLLBACK TRAN
-        THROW -- Kích hoạt lại lỗi ban đầu
+    BEGIN CATCH 
+        -- Xử lý rollback nếu giao dịch vẫn đang mở
+        IF XACT_STATE() <> 0 -- Chỉ rollback nếu giao dịch khả dụng
+            ROLLBACK TRAN;
+        THROW
     END CATCH
 END
 GO
@@ -173,41 +188,75 @@ BEGIN
             -- Cập nhật hoặc thêm chi tiết khuyến mãi vào bảng tương ứng
             IF @LoaiKhuyenMai = 'Flash'
             BEGIN
-                IF EXISTS (SELECT 1 FROM CHI_TIET_KHUYEN_MAI_FLASH WHERE MaKhuyenMai = @MaKhuyenMai AND MaSanPham = @MaSanPham)
+                IF EXISTS (
+                    SELECT 1 
+                    FROM CHI_TIET_KHUYEN_MAI_FLASH WITH (UPDLOCK) -- Khóa UPDLOCK để ngăn cập nhật đồng thời
+                    WHERE MaKhuyenMai = @MaKhuyenMai AND MaSanPham = @MaSanPham
+                )
+                BEGIN
+                    -- Cập nhật nếu đã tồn tại
                     UPDATE CHI_TIET_KHUYEN_MAI_FLASH
                     SET 
                         SoLuongConLai = COALESCE(@SoLuongConLai, SoLuongConLai),
                         GiaTriKhuyenMai = COALESCE(@GiaTriKhuyenMai, GiaTriKhuyenMai)
                     WHERE MaKhuyenMai = @MaKhuyenMai AND MaSanPham = @MaSanPham
+                END
                 ELSE
-                    INSERT INTO CHI_TIET_KHUYEN_MAI_FLASH (MaKhuyenMai, MaSanPham, SoLuongConLai, GiaTriKhuyenMai)
+                BEGIN
+                    -- Thêm mới nếu chưa tồn tại
+                    INSERT INTO CHI_TIET_KHUYEN_MAI_FLASH WITH (XLOCK) -- Khóa XLOCK để ngăn chèn đồng thời
                     VALUES (@MaKhuyenMai, @MaSanPham, @SoLuongConLai, @GiaTriKhuyenMai)
+                END
                 SET @RowsInserted = @RowsInserted + @@ROWCOUNT
             END
             ELSE IF @LoaiKhuyenMai = 'Combo'
             BEGIN
-                IF EXISTS (SELECT 1 FROM CHI_TIET_KHUYEN_MAI_COMBO WHERE MaKhuyenMai = @MaKhuyenMai AND ((MaSanPham1 = @MaSanPham AND MaSanPham2 = @MaSanPham2) OR (MaSanPham1 = @MaSanPham2 AND MaSanPham2 = @MaSanPham)))
+                IF EXISTS (
+                    SELECT 1 
+                    FROM CHI_TIET_KHUYEN_MAI_COMBO WITH (UPDLOCK) -- Khóa UPDLOCK để ngăn cập nhật đồng thời
+                    WHERE MaKhuyenMai = @MaKhuyenMai AND 
+                        ((MaSanPham1 = @MaSanPham AND MaSanPham2 = @MaSanPham2) OR 
+                        (MaSanPham1 = @MaSanPham2 AND MaSanPham2 = @MaSanPham))
+                )
+                BEGIN
+                    -- Cập nhật nếu đã tồn tại
                     UPDATE CHI_TIET_KHUYEN_MAI_COMBO
                     SET 
                         SoLuongConLai = COALESCE(@SoLuongConLai, SoLuongConLai),
                         GiaTriKhuyenMai = COALESCE(@GiaTriKhuyenMai, GiaTriKhuyenMai)
-                    WHERE MaKhuyenMai = @MaKhuyenMai AND ((MaSanPham1 = @MaSanPham AND MaSanPham2 = @MaSanPham2) OR (MaSanPham1 = @MaSanPham2 AND MaSanPham2 = @MaSanPham))
+                    WHERE MaKhuyenMai = @MaKhuyenMai AND 
+                        ((MaSanPham1 = @MaSanPham AND MaSanPham2 = @MaSanPham2) OR 
+                        (MaSanPham1 = @MaSanPham2 AND MaSanPham2 = @MaSanPham))
+                END
                 ELSE
-                    INSERT INTO CHI_TIET_KHUYEN_MAI_COMBO (MaKhuyenMai, MaSanPham1, MaSanPham2, SoLuongConLai, GiaTriKhuyenMai)
+                BEGIN
+                    -- Thêm mới nếu chưa tồn tại
+                    INSERT INTO CHI_TIET_KHUYEN_MAI_COMBO WITH (XLOCK)
                     VALUES (@MaKhuyenMai, @MaSanPham, @MaSanPham2, @SoLuongConLai, @GiaTriKhuyenMai)
+                END
                 SET @RowsInserted = @RowsInserted + @@ROWCOUNT
             END
             ELSE IF @LoaiKhuyenMai = 'Member'
             BEGIN
-                IF EXISTS (SELECT 1 FROM CHI_TIET_KHUYEN_MAI_MEMBER WHERE MaKhuyenMai = @MaKhuyenMai AND MaSanPham = @MaSanPham AND LoaiKhachHang = @LoaiKhachHang)
+                IF EXISTS (
+                    SELECT 1 
+                    FROM CHI_TIET_KHUYEN_MAI_MEMBER WITH (UPDLOCK) -- Khóa UPDLOCK để ngăn cập nhật đồng thời
+                    WHERE MaKhuyenMai = @MaKhuyenMai AND MaSanPham = @MaSanPham AND LoaiKhachHang = @LoaiKhachHang
+                )
+                BEGIN
+                    -- Cập nhật nếu đã tồn tại
                     UPDATE CHI_TIET_KHUYEN_MAI_MEMBER
                     SET 
                         SoLuongConLai = COALESCE(@SoLuongConLai, SoLuongConLai),
                         GiaTriKhuyenMai = COALESCE(@GiaTriKhuyenMai, GiaTriKhuyenMai)
                     WHERE MaKhuyenMai = @MaKhuyenMai AND MaSanPham = @MaSanPham AND LoaiKhachHang = @LoaiKhachHang
+                END
                 ELSE
-                    INSERT INTO CHI_TIET_KHUYEN_MAI_MEMBER (MaKhuyenMai, MaSanPham, LoaiKhachHang, SoLuongConLai, GiaTriKhuyenMai)
+                BEGIN
+                    -- Thêm mới nếu chưa tồn tại
+                    INSERT INTO CHI_TIET_KHUYEN_MAI_MEMBER WITH (XLOCK)
                     VALUES (@MaKhuyenMai, @MaSanPham, @LoaiKhachHang, @SoLuongConLai, @GiaTriKhuyenMai)
+                END
                 SET @RowsInserted = @RowsInserted + @@ROWCOUNT
             END
 
@@ -222,9 +271,8 @@ BEGIN
         COMMIT TRAN
     END TRY
     BEGIN CATCH
-        IF @@TRANCOUNT > 0 -- Chỉ rollback nếu giao dịch vẫn đang mở
-            ROLLBACK TRAN
-        THROW -- Kích hoạt lại lỗi ban đầu
+        ROLLBACK TRAN;
+        THROW
     END CATCH
 END
 GO

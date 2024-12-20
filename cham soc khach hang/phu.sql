@@ -43,9 +43,8 @@ BEGIN
         PRINT N'Tạo phiếu mua hàng thành công cho khách hàng có Mã: ' + CAST(@MaKhachHang AS NVARCHAR)
     END TRY
     BEGIN CATCH
-        IF @@TRANCOUNT > 0 -- Chỉ rollback nếu giao dịch vẫn đang mở
-            ROLLBACK TRAN;
-        THROW; -- Kích hoạt lại lỗi ban đầu
+        ROLLBACK TRAN;
+        THROW;
     END CATCH
 END
 GO
@@ -79,9 +78,8 @@ BEGIN
         PRINT N'Tạo thông báo thành công cho khách hàng có Mã: ' + CAST(@MaKhachHang AS NVARCHAR)
     END TRY
     BEGIN CATCH
-        IF @@TRANCOUNT > 0 -- Chỉ rollback nếu giao dịch vẫn đang mở
-            ROLLBACK TRAN;
-        THROW; -- Kích hoạt lại lỗi ban đầu
+        ROLLBACK TRAN;
+        THROW;
     END CATCH
 END
 GO

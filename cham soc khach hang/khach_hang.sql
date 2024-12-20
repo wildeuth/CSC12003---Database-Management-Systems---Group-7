@@ -36,9 +36,8 @@ BEGIN
         PRINT N'Đăng ký khách hàng thành công.'
     END TRY
     BEGIN CATCH
-        IF @@TRANCOUNT > 0 -- Chỉ rollback nếu giao dịch vẫn đang mở
-            ROLLBACK TRAN;
-        THROW; -- Kích hoạt lại lỗi ban đầu
+        ROLLBACK TRAN;
+        THROW;
     END CATCH
 END
 GO
@@ -99,9 +98,8 @@ BEGIN
         PRINT N'Cập nhật thông tin khách hàng thành công.'
     END TRY
     BEGIN CATCH
-        IF @@TRANCOUNT > 0 -- Chỉ rollback nếu giao dịch vẫn đang mở
-            ROLLBACK TRAN;
-        THROW; -- Kích hoạt lại lỗi ban đầu
+        ROLLBACK TRAN;
+        THROW;
     END CATCH
 END
 GO
@@ -157,9 +155,8 @@ BEGIN
         PRINT N'Cập nhật hạng khách hàng thành công.'
     END TRY
     BEGIN CATCH
-        IF @@TRANCOUNT > 0 -- Chỉ rollback nếu giao dịch vẫn đang mở
-            ROLLBACK TRAN;
-        THROW; -- Kích hoạt lại lỗi ban đầu
+        ROLLBACK TRAN;
+        THROW;
     END CATCH
 END
 GO
