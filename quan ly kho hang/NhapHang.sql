@@ -2,7 +2,7 @@
 GO
 
 -- Stored Procedure: NhapHang
-CREATE PROCEDURE NhapHang
+CREATE or ALTER PROCEDURE NhapHang
     @MaSanPham INT,
     @NhaSanXuatID INT,
 	@NgayNhan date,
@@ -27,7 +27,7 @@ END
 GO
 
 -- Stored Procedure: LayDanhSachDonDatHangDaNhan
-CREATE PROCEDURE LayDanhSachDonDatHangDaNhan
+CREATE or ALTER PROCEDURE LayDanhSachDonDatHangDaNhan
     @MaSanPham INT,
     @NhaSanXuatID INT
 AS
@@ -86,7 +86,7 @@ BEGIN
 END;
 GO
 -- Stored Procedure: XuLyNhapHang
-CREATE PROCEDURE XuLyNhapHang
+CREATE or ALTER PROCEDURE XuLyNhapHang
     @MaSanPham INT,
     @NhaSanXuatID INT
 AS

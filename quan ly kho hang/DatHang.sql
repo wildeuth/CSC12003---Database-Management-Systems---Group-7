@@ -1,7 +1,7 @@
 ﻿USE QLST
 GO
 
-CREATE PROCEDURE KiemTraHangTonCuaSanPham
+CREATE or alter PROCEDURE KiemTraHangTonCuaSanPham
     @MaSanPham INT,
     @Ngay DATE,
     @QuyetDinhDatHang BIT OUTPUT,
@@ -14,13 +14,13 @@ BEGIN
     DECLARE @SoLuongMua INT, @SLSPTD INT, @SoLuongTon INT, @SoLuongConLai INT;
 
     -- Tìm số lượng mua trong ngày
-    SELECT @SoLuongMua = SUM(SoLuong)
-    FROM ChiTietPhieuMuaSam c
-    JOIN PhieuMuaSam p ON c.MaPhieuMuaSam = p.MaPhieuMuaSam
-    WHERE p.MaSanPham = @MaSanPham AND p.Ngay = @Ngay;
+    SELECT @SoLuongMua = SUM(c.SoLuongDat)
+    FROM CHI_TIET_PHIEU_MUA_SAM c
+    JOIN PHIEU_MUA_SAM p ON c.MaPhieuMuaSam = p.MaPhieuMuaSam
+    WHERE c.MaSanPham = @MaSanPham AND p.NgayDat = @Ngay;
 
     -- Lấy số lượng sản phẩm tối đa
-    SELECT @SLSPTD = SoLuongSanPhamToiDa, @SoLuongTon = SoLuongTonKhoHienTai
+    SELECT @SLSPTD = SLSPTD, @SoLuongTon = SoLuongTonKhoHienTai
     FROM SAN_PHAM 
     WHERE MaSanPham = @MaSanPham;
 
@@ -43,7 +43,7 @@ END;
 GO
 
 -- Stored Procedure: DatHangSanPham
-CREATE PROCEDURE DatHangSanPham
+CREATE or alter PROCEDURE DatHangSanPham
     @MaSanPham INT,
 	@NgayDat DATE,
     @SoLuongDat INT
@@ -60,7 +60,7 @@ BEGIN
 END
 GO
 -- Stored Procedure: KiemTraVaDatHang
-CREATE PROCEDURE KiemTraVaDatHang
+CREATE or ALTER PROCEDURE KiemTraVaDatHang
     @MaSanPham INT,
 	@NgayDat DaTE
 AS
