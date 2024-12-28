@@ -108,8 +108,8 @@ BEGIN
         FROM KHUYEN_MAI KM WITH (HOLDLOCK)
         INNER JOIN CHI_TIET_KHUYEN_MAI_FLASH CKMF WITH (HOLDLOCK)
             ON KM.MaKhuyenMai = CKMF.MaKhuyenMai
-        WHERE CKMF.MaSanPham = @MaSanPham1
-          AND KM.NgayBatDau <= GETDATE() AND KM.NgayKetThuc >= GETDATE()
+        WHERE CKMF.MaSanPham = 1
+          AND KM.NgayBatDau <= '2024-12-29' AND KM.NgayKetThuc >= '2024-12-30'
         
         UNION ALL
         
@@ -126,7 +126,7 @@ BEGIN
             ON KM.MaKhuyenMai = CKMM.MaKhuyenMai
         WHERE CKMM.MaSanPham = @MaSanPham1
           AND (@LoaiKhachHang IS NOT NULL)
-          AND KM.NgayBatDau <= GETDATE() AND KM.NgayKetThuc >= GETDATE()
+          AND KM.NgayBatDau <= '2024-12-29' AND KM.NgayKetThuc >= '2024-12-30'
         
         UNION ALL
         
@@ -143,7 +143,7 @@ BEGIN
             ON KM.MaKhuyenMai = CKMC.MaKhuyenMai
         WHERE (CKMC.MaSanPham1 = @MaSanPham1 OR CKMC.MaSanPham2 = @MaSanPham2)
           AND (@MaSanPham2 IS NOT NULL)
-          AND KM.NgayBatDau <= GETDATE() AND KM.NgayKetThuc >= GETDATE()
+          AND KM.NgayBatDau <= '2024-12-29' AND KM.NgayKetThuc >= '2024-12-30'
     )
 
     -- Sắp xếp kết quả theo yêu cầu
@@ -166,6 +166,8 @@ CREATE OR ALTER PROCEDURE ApDungKhuyenMaiSanPham
     @MaSanPham2 INT = NULL,
     @SoLuong2 INT = NULL,
     @LoaiKhachHang NVARCHAR(50),
+	@MaKhuyenMai1 INT OUTPUT,
+	@MaKhuyenMai2 INT OUTPUT,
     @GiaSauKhuyenMai1 MONEY OUTPUT,
     @GiaSauKhuyenMai2 MONEY OUTPUT
 AS
@@ -191,7 +193,7 @@ BEGIN
             -- Gọi procedure để lấy danh sách khuyến mãi
             INSERT INTO #DanhSachKhuyenMai
             EXEC LayDanhSachKhuyenMaiHienTaiCuaSanPham @LoaiKhachHang, @MaSanPham1, @MaSanPham2
-
+			
             -- Lấy khuyến mãi ưu tiên cao nhất
             DECLARE @GiaTriKhuyenMai1 FLOAT, @LoaiKhuyenMai1 NVARCHAR(20)
             SELECT TOP 1 
@@ -200,6 +202,8 @@ BEGIN
             FROM #DanhSachKhuyenMai
             WHERE MaKhuyenMai IS NOT NULL
             ORDER BY GiaTriKhuyenMai DESC
+
+			SELECT @MaKhuyenMai1 = MaKhuyenMai FROM #DanhSachKhuyenMai
 
             -- Kiểm tra số lượng và tính giá
             IF @GiaTriKhuyenMai1 IS NOT NULL
@@ -214,6 +218,7 @@ BEGIN
                 FROM SAN_PHAM WITH (HOLDLOCK)
                 WHERE MaSanPham = @MaSanPham1
             END
+			select * from #DanhSachKhuyenMai
         END
 
         -- Xử lý sản phẩm 2 (nếu tồn tại)
@@ -286,8 +291,8 @@ BEGIN
 
     BEGIN TRY
         -- 1. Tạo hóa đơn mới
-        INSERT INTO HOA_DON (MaPhieuMuaSam, TrangThaiThanhToan)
-        VALUES (@MaPhieuMuaSam, 0)
+        INSERT INTO HOA_DON (MaPhieuMuaSam, TrangThaiThanhToan, TongTien, ThanhToan)
+        VALUES (@MaPhieuMuaSam, 0, 0, 0) -- Tổng tiền sẽ cập nhật sau
 
         -- Lấy MaHoaDon vừa tạo
         SET @MaHoaDon = SCOPE_IDENTITY()
@@ -301,7 +306,8 @@ BEGIN
 
         -- 3. Lấy danh sách chi tiết sản phẩm trong phiếu mua sắm
         DECLARE @MaSanPham INT, @SoLuong INT
-        DECLARE @GiaSauKhuyenMai MONEY
+        DECLARE @GiaSauKhuyenMai MONEY, @GiaBanGoc MONEY
+        DECLARE @TongTien MONEY = 0, @TongTienThanhToan MONEY = 0
 
         DECLARE product_cursor CURSOR FOR
         SELECT MaSanPham, SoLuongDat
@@ -314,19 +320,29 @@ BEGIN
         -- 4. Duyệt qua từng sản phẩm trong phiếu mua sắm
         WHILE @@FETCH_STATUS = 0
         BEGIN
+            -- Lấy giá gốc của sản phẩm
+            SELECT @GiaBanGoc = GiaNiemYet 
+            FROM SAN_PHAM 
+            WHERE MaSanPham = @MaSanPham
+
+			DECLARE @MaKhuyenMai1 INT
             -- Gọi stored procedure ApDungKhuyenMaiSanPham để lấy giá sau khuyến mãi
             EXEC ApDungKhuyenMaiSanPham 
                 @MaSanPham1 = @MaSanPham, 
                 @SoLuong1 = @SoLuong, 
                 @LoaiKhachHang = @LoaiKhachHang, 
+				@MaKhuyenMai1 = @MaKhuyenMai1,
                 @GiaSauKhuyenMai1 = @GiaSauKhuyenMai OUTPUT,
 				@GiaSauKhuyenMai2 = @GiaSauKhuyenMai OUTPUT
+			--print (@GiaSauKhuyenMai1)
+            -- Tính tổng tiền gốc và sau khi khuyến mãi
+            DECLARE @SoLuongTinhTien INT = CASE WHEN @SoLuong > 3 THEN 3 ELSE @SoLuong END
+            SET @TongTien = @TongTien + (@GiaBanGoc * @SoLuongTinhTien)
+            SET @TongTienThanhToan = @TongTienThanhToan + (@GiaSauKhuyenMai * @SoLuongTinhTien)
 
             -- Thêm chi tiết hóa đơn
-            INSERT INTO CHI_TIET_HOA_DON (MaHoaDon, MaSanPham, SoLuong, GiaBan)
-            VALUES (@MaHoaDon, @MaSanPham, 
-                    CASE WHEN @SoLuong > 3 THEN 3 ELSE @SoLuong END, 
-                    @GiaSauKhuyenMai)
+            INSERT INTO CHI_TIET_HOA_DON (MaHoaDon, MaSanPham, SoLuong, MaKhuyenMai, GiaBan, GiaSauKhuyenMai)
+            VALUES (@MaHoaDon, @MaSanPham, @SoLuongTinhTien, @MaKhuyenMai1, @GiaBanGoc, @GiaSauKhuyenMai)
 
             FETCH NEXT FROM product_cursor INTO @MaSanPham, @SoLuong
         END
@@ -334,7 +350,13 @@ BEGIN
         CLOSE product_cursor
         DEALLOCATE product_cursor
 
-        -- 5. Cập nhật trạng thái thanh toán hóa đơn là chưa thanh toán
+        -- 5. Cập nhật tổng tiền gốc và tổng tiền thanh toán vào hóa đơn
+        UPDATE HOA_DON
+        SET TongTien = @TongTien,
+            ThanhToan = @TongTienThanhToan
+        WHERE MaHoaDon = @MaHoaDon
+
+        -- 6. Cập nhật trạng thái thanh toán hóa đơn là chưa thanh toán
         UPDATE HOA_DON
         SET TrangThaiThanhToan = 0
         WHERE MaHoaDon = @MaHoaDon
@@ -342,12 +364,15 @@ BEGIN
         COMMIT TRANSACTION
     END TRY
     BEGIN CATCH
-        ROLLBACK TRANSACTION
-        THROW
+        -- Kiểm tra nếu có giao dịch thì rollback
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+
+        -- Gửi lỗi về cho người dùng
+        THROW;
     END CATCH
 END
 GO
-
 
 -- Xuất hóa đơn
 CREATE OR ALTER PROCEDURE XuatHoaDon
@@ -455,7 +480,7 @@ BEGIN
         IF @MaKhachHang IS NOT NULL
         BEGIN
             UPDATE KHACH_HANG
-            SET TienTichLuy = TienTichLuy + FLOOR(@TongTien / 1000) -- Cứ 1000 đồng = 1 điểm
+            SET TienTichLuy = TienTichLuy + @TongTien -- Cứ 1000 đồng = 1 điểm
             WHERE MaKhachHang = @MaKhachHang
         END
 
