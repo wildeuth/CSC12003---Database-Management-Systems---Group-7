@@ -4,19 +4,25 @@ GO
 
 -- TH1: CapNhatHangKhachHangHangThang và CapNhatThongTinKhachHang
 -- Dữ liệu ban đầu: Tiền tích lũy của khách hàng có id 2 là 1000000
--- T2 : Gọi thủ tục CapNhatHangKhachHangHangThang để cập nhật hạng khách hàng và reset TienTichLuy cho khách hàng
+-- T2: Gọi thủ tục CapNhatThongTinKhachHang để cập nhật tiền tích lũy và hạng của khách hàng có id 2
 BEGIN TRANSACTION T2
-EXEC CapNhatHangKhachHangHangThang
+EXEC CapNhatThongTinKhachHang 
+    @MaKhachHang = 2, 
+    @TienTichLuy = 7000000,
+	@LoaiKhachHang = N'Vàng'
 COMMIT TRANSACTION T2
 
 SELECT * FROM KHACH_HANG
+
 -- TH2: CapNhatSanPham và XuatHoaDon
--- Dữ liệu ban đầu: Số lượng tồn kho hiện tại của sản phẩm A là 10. Hóa đơn có id 1 mua 5 sản phẩm A
--- T2: Gọi XuatHoaDon và trừ 5 số lượng tồn kho hiện tại của sản phẩm A 
+-- Dữ liệu ban đầu: Số lượng tồn kho hiện tại của mã sản phẩm là 10. Hóa đơn có id 1 mua 5 sản phẩm A
+-- T2: Gọi thủ tục CapNhatSanPham và cập nhật số lượng tồn kho hiện tại của sản phẩm A là 6
 BEGIN TRANSACTION T2
-EXEC XuatHoaDon 
-	@MaHoaDon = 1
+EXEC dbo.CapNhatSanPham 
+	@MaSanPham = 1,
+	@SoLuongTonKhoHienTai = 6
 COMMIT TRANSACTION T2
+SELECT * FROM SAN_PHAM
 
 SELECT * FROM CHI_TIET_HOA_DON	
 SELECT * FROM SAN_PHAM
