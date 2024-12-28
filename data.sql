@@ -1,39 +1,45 @@
 ﻿USE QLST
 GO
+DBCC CHECKIDENT ('KHACH_HANG', RESEED, 0);
+DBCC CHECKIDENT ('KHUYEN_MAI', RESEED, 0);
+DBCC CHECKIDENT ('DANH_MUC', RESEED, 0);
+DBCC CHECKIDENT ('NHA_SAN_XUAT', RESEED, 0);
+DBCC CHECKIDENT ('PHIEU_MUA_SAM', RESEED, 0);
+DBCC CHECKIDENT ('HOA_DON', RESEED, 0);
+DBCC CHECKIDENT ('SAN_PHAM', RESEED, 0);
+DBCC CHECKIDENT ('CHI_TIET_HOA_DON', RESEED, 0);
+
+DELETE FROM CHI_TIET_PHIEU_MUA_SAM
+DELETE FROM CHI_TIET_HOA_DON
+
+
+DELETE FROM KHUYEN_MAI
+DELETE FROM SAN_PHAM
+DELETE FROM DANH_MUC
+DELETE FROM NHA_SAN_XUAT
+
+DELETE FROM HOA_DON
+DELETE FROM PHIEU_MUA_SAM
+DELETE FROM KHACH_HANG
+DELETE FROM PHAN_LOAI
+
+
 -- Chuẩn bị dữ liệu
-EXEC dbo.ThemPhanLoai 
-    @Loai = N'Thân thiết',
-    @DieuKien = 0,
-    @GiaTri = 0
+INSERT INTO PHAN_LOAI(Loai, DieuKien, GiaTri)
+VALUES 
+    (N'Thân thiết', 0, 0),
+    (N'Đồng', 3000000, 100000),
+    (N'Bạc', 5000000, 200000),
+    (N'Vàng', 15000000, 500000),
+    (N'Bạch kim', 30000000, 700000),
+    (N'Kim cương', 50000000, 1200000);
 
-EXEC dbo.ThemPhanLoai 
-    @Loai = N'Đồng',
-    @DieuKien = 3000000,
-    @GiaTri = 100000
 
-EXEC dbo.ThemPhanLoai 
-    @Loai = N'Bạc',
-    @DieuKien = 5000000,
-    @GiaTri = 200000
-
-EXEC dbo.ThemPhanLoai 
-    @Loai = N'Vàng',
-    @DieuKien = 15000000,
-    @GiaTri = 500000
-
-EXEC dbo.ThemPhanLoai 
-    @Loai = N'Bạch kim',
-    @DieuKien = 30000000,
-    @GiaTri = 700000
-
-EXEC dbo.ThemPhanLoai 
-    @Loai = N'Kim cương',
-    @DieuKien = 50000000,
-    @GiaTri = 1200000
-
-insert KHACH_HANG values (1, N'Nguyễn Văn A', 'nguyenvana@gmail.com', N'123 Đường A', '1985-12-05', '0909123456', N'Bạc', '2024-12-17', 5000000)
-insert KHACH_HANG values (2, N'Trần Thị B', 'tranthib@gmail.com', N'123 Đường A - Cập nhật', '1985-12-20', '0911223344', N'Bạc', '2024-12-20', 1000000)
-insert KHACH_HANG values (3, N'Lê Văn C', 'levanc@gmail.com', N'789 Đường C', '1988-12-15', N'Bạc', '0987654321', N'Thân thiết', '2024-12-17', 0)
+INSERT INTO KHACH_HANG (HoTen, Email, DiaChi, NgaySinh, SoDienThoai, LoaiKhachHang, NgayDangKy, TienTichLuy)
+VALUES 
+(N'Nguyễn Văn A', 'nguyenvana@gmail.com', N'123 Đường A', '1985-12-05', '0909123456', N'Bạc', '2024-12-17', 5000000),
+(N'Trần Thị B', 'tranthib@gmail.com', N'123 Đường A - Cập nhật', '1985-12-20', '0911223344', N'Bạc', '2024-12-20', 1000000),
+(N'Lê Văn C', 'levanc@gmail.com', N'789 Đường C', '1988-12-15', '0987654321', N'Thân thiết', '2024-12-17', 0)
 
 INSERT INTO DANH_MUC (TenDanhMuc, DaXoa) 
 VALUES
@@ -138,3 +144,20 @@ VALUES
 -- Chi tiết cho hóa đơn 7
 (7, 1, 4, 50000),
 (7, 3, 2, 120000);
+
+/*
+SELECT * FROM CHI_TIET_PHIEU_MUA_SAM
+SELECT * FROM CHI_TIET_HOA_DON
+
+
+SELECT * FROM KHUYEN_MAI
+SELECT * FROM SAN_PHAM
+SELECT * FROM DANH_MUC
+SELECT * FROM NHA_SAN_XUAT
+
+SELECT * FROM HOA_DON
+SELECT * FROM PHIEU_MUA_SAM
+SELECT * FROM KHACH_HANG
+SELECT * FROM PHAN_LOAI
+*/
+

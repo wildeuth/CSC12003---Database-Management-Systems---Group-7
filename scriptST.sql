@@ -129,6 +129,7 @@ CREATE TABLE HOA_DON (
     MaPhieuMuaSam INT NOT NULL FOREIGN KEY REFERENCES PHIEU_MUA_SAM(MaPhieuMuaSam),
 	PhieuMuaHang INT NULL FOREIGN KEY REFERENCES PHIEU_MUA_HANG(MaPhieuMuaHang),
     TrangThaiThanhToan BIT DEFAULT 0,
+	NgayLap DATETIME,
 	--tổng tiền sau khuyến mãi
     TongTien MONEY NOT NULL,
 	ThanhToan MONEY NOT NULL
