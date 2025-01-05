@@ -20,7 +20,7 @@ BEGIN
     -- Update lock for updating stock quantity
     UPDATE SAN_PHAM WITH (UPDLOCK)
     SET SoLuongTonKhoHienTai = SoLuongTonKhoHienTai + @SoLuongNhan
-    WHERE MaSanPham = @MaSanPham;
+    WHERE MaSanPham = @MaSanPham AND DaXoa = 0;
 
     COMMIT TRANSACTION;
 END

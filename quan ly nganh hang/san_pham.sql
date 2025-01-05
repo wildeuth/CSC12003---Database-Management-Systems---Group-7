@@ -21,7 +21,7 @@ BEGIN
         IF NOT EXISTS (
             SELECT 1 
             FROM DANH_MUC WITH (UPDLOCK, HOLDLOCK) -- Khóa để đảm bảo không bị thay đổi đồng thời
-            WHERE MaDanhMuc = @MaDanhMuc
+            WHERE MaDanhMuc = @MaDanhMuc AND DaXoa = 0
         )
             THROW 50000, 'Danh mục không tồn tại.', 1
 
@@ -29,7 +29,7 @@ BEGIN
         IF NOT EXISTS (
             SELECT 1 
             FROM NHA_SAN_XUAT WITH (UPDLOCK, HOLDLOCK) -- Khóa để ngăn các thay đổi đồng thời
-            WHERE MaNhaSanXuat = @MaNhaSanXuat
+            WHERE MaNhaSanXuat = @MaNhaSanXuat AND DaXoa = 0
         )
             THROW 50000, 'Nhà sản xuất không tồn tại.', 1
 
@@ -88,7 +88,7 @@ BEGIN
         IF @MaDanhMuc IS NOT NULL AND NOT EXISTS (
             SELECT 1 
             FROM DANH_MUC WITH (UPDLOCK, HOLDLOCK)
-            WHERE MaDanhMuc = @MaDanhMuc
+            WHERE MaDanhMuc = @MaDanhMuc AND DaXoa = 0
         )
             THROW 50000, 'Danh mục không tồn tại.', 1
 
@@ -96,7 +96,7 @@ BEGIN
         IF @MaNhaSanXuat IS NOT NULL AND NOT EXISTS (
             SELECT 1 
             FROM NHA_SAN_XUAT WITH (UPDLOCK, HOLDLOCK)
-            WHERE MaNhaSanXuat = @MaNhaSanXuat
+            WHERE MaNhaSanXuat = @MaNhaSanXuat AND DaXoa = 0
         )
             THROW 50000, 'Nhà sản xuất không tồn tại.', 1
 
@@ -126,7 +126,7 @@ BEGIN
             MaNhaSanXuat = COALESCE(@MaNhaSanXuat, MaNhaSanXuat),
             SoLuongTonKhoHienTai = COALESCE(@SoLuongTonKhoHienTai, SoLuongTonKhoHienTai),
             SLSPTD = COALESCE(@SLSPTD, SLSPTD)
-        WHERE MaSanPham = @MaSanPham
+        WHERE MaSanPham = @MaSanPham AND DaXoa = 0
 
         PRINT N'Cập nhật sản phẩm thành công.'
         COMMIT TRAN
@@ -159,7 +159,7 @@ BEGIN
         -- Đánh dấu đã xóa sản phẩm
         UPDATE SAN_PHAM
         SET DaXoa = 1
-        WHERE MaSanPham = @MaSanPham
+        WHERE MaSanPham = @MaSanPham AND DaXoa = 0
 
         PRINT N'Xóa sản phẩm thành công.'
         COMMIT TRAN

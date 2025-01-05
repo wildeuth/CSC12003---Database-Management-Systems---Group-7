@@ -64,7 +64,7 @@ BEGIN
         -- Cập nhật danh mục
         UPDATE DANH_MUC
         SET TenDanhMuc = @TenDanhMuc
-        WHERE MaDanhMuc = @MaDanhMuc
+        WHERE MaDanhMuc = @MaDanhMuc AND DaXoa = 0
 
         PRINT N'Cập nhật danh mục thành công.'
 
@@ -98,12 +98,12 @@ BEGIN
         -- Đánh dấu đã xóa sản phẩm
         UPDATE SAN_PHAM
         SET DaXoa = 1
-        WHERE MaDanhMuc = @MaDanhMuc
+        WHERE MaDanhMuc = @MaDanhMuc AND DaXoa = 0
 
         -- Đánh dấu đã xóa danh mục
         UPDATE DANH_MUC
         SET DaXoa = 1
-        WHERE MaDanhMuc = @MaDanhMuc
+        WHERE MaDanhMuc = @MaDanhMuc AND DaXoa = 0
 
         PRINT N'Xóa danh mục thành công.'
 

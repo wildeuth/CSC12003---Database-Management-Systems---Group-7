@@ -42,7 +42,7 @@ BEGIN
         -- 2. Kiểm tra sản phẩm
         SELECT TOP 1 1
         FROM SAN_PHAM WITH (HOLDLOCK) -- Shared Lock
-        WHERE MaSanPham = @MaSanPham
+        WHERE MaSanPham = @MaSanPham AND DaXoa = 0
 		
         IF @@ROWCOUNT = 0
         BEGIN
@@ -55,7 +55,7 @@ BEGIN
         DECLARE @SoLuongTon INT
         SELECT @SoLuongTon = SoLuongTonKhoHienTai
         FROM SAN_PHAM WITH (HOLDLOCK) -- Shared Lock
-        WHERE MaSanPham = @MaSanPham
+        WHERE MaSanPham = @MaSanPham AND DaXoa = 0
 
         IF @SoLuongTon < @SoLuong
         BEGIN
@@ -210,13 +210,13 @@ BEGIN
             BEGIN
                 SELECT @GiaSauKhuyenMai1 = GiaNiemYet * (1 - @GiaTriKhuyenMai1 / 100)
                 FROM SAN_PHAM WITH (HOLDLOCK)
-                WHERE MaSanPham = @MaSanPham1
+                WHERE MaSanPham = @MaSanPham1 AND DaXoa = 0
             END
             ELSE
             BEGIN
                 SELECT @GiaSauKhuyenMai1 = GiaNiemYet
                 FROM SAN_PHAM WITH (HOLDLOCK)
-                WHERE MaSanPham = @MaSanPham1
+                WHERE MaSanPham = @MaSanPham1 AND DaXoa = 0
             END
 			select * from #DanhSachKhuyenMai
         END
@@ -245,13 +245,13 @@ BEGIN
             BEGIN
                 SELECT @GiaSauKhuyenMai2 = GiaNiemYet * (1 - @GiaTriKhuyenMai2 / 100)
                 FROM SAN_PHAM WITH (HOLDLOCK)
-                WHERE MaSanPham = @MaSanPham2
+                WHERE MaSanPham = @MaSanPham2 AND DaXoa = 0
             END
             ELSE
             BEGIN
                 SELECT @GiaSauKhuyenMai2 = GiaNiemYet
                 FROM SAN_PHAM WITH (HOLDLOCK)
-                WHERE MaSanPham = @MaSanPham2
+                WHERE MaSanPham = @MaSanPham2 AND DaXoa = 0
             END
         END
 
@@ -323,7 +323,7 @@ BEGIN
             -- Lấy giá gốc của sản phẩm
             SELECT @GiaBanGoc = GiaNiemYet 
             FROM SAN_PHAM 
-            WHERE MaSanPham = @MaSanPham
+            WHERE MaSanPham = @MaSanPham AND DaXoa = 0
 
 			DECLARE @MaKhuyenMai1 INT
             -- Gọi stored procedure ApDungKhuyenMaiSanPham để lấy giá sau khuyến mãi
@@ -431,7 +431,7 @@ BEGIN
             -- 5.2 Giảm số lượng tồn kho
             UPDATE SAN_PHAM
             SET SoLuongTonKhoHienTai = SoLuongTonKhoHienTai - @SoLuong
-            WHERE MaSanPham = @MaSanPham
+            WHERE MaSanPham = @MaSanPham AND DaXoa = 0
 
             -- 5.3 Lấy khuyến mãi áp dụng
             SELECT TOP 1 @GiaTriKhuyenMai = GiaTriKhuyenMai, @LoaiKhuyenMai = LoaiKhuyenMai

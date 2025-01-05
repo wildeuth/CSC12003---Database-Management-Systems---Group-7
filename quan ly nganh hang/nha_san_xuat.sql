@@ -65,7 +65,7 @@ BEGIN
         -- Cập nhật nhà sản xuất
         UPDATE NHA_SAN_XUAT
         SET TenNhaSanXuat = @TenNhaSanXuat
-        WHERE MaNhaSanXuat = @MaNhaSanXuat
+        WHERE MaNhaSanXuat = @MaNhaSanXuat AND DaXoa = 0
 
         PRINT N'Cập nhật nhà sản xuất thành công.'
         
@@ -99,12 +99,12 @@ BEGIN
         -- Đánh dấu đã xóa các sản phẩm của nhà sản xuất
         UPDATE SAN_PHAM
         SET DaXoa = 1
-        WHERE MaNhaSanXuat = @MaNhaSanXuat
+        WHERE MaNhaSanXuat = @MaNhaSanXuat AND DaXoa = 0
 
         -- Đánh dấu nhà sản xuất là đã xóa
         UPDATE NHA_SAN_XUAT
         SET DaXoa = 1
-        WHERE MaNhaSanXuat = @MaNhaSanXuat
+        WHERE MaNhaSanXuat = @MaNhaSanXuat AND DaXoa = 0
 
         PRINT N'Xóa nhà sản xuất thành công.'
         

@@ -22,7 +22,7 @@ BEGIN
     -- Lấy số lượng sản phẩm tối đa
     SELECT @SLSPTD = SLSPTD, @SoLuongTon = SoLuongTonKhoHienTai
     FROM SAN_PHAM 
-    WHERE MaSanPham = @MaSanPham;
+    WHERE MaSanPham = @MaSanPham AND DaXoa = 0;
 
     -- Kiểm tra điều kiện đặt hàng
     SET @SoLuongConLai = @SoLuongTon - @SoLuongMua;
