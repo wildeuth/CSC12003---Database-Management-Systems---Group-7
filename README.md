@@ -6,7 +6,7 @@
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Introduction](#introduction)
 - [System Architecture](#system-architecture)
@@ -18,65 +18,20 @@
 
 ---
 
-## 🎯 Introduction
+## Introduction
 
 The **Supermarket Management System (SMS)** is a comprehensive management application developed using SQL Server, including:
 
-- ✅ Customer management with VIP classification system
-- ✅ Inventory management and import/export operations
-- ✅ Product catalog and manufacturer management
-- ✅ Diverse promotion system (Flash, Combo, Member)
-- ✅ Order processing and payment handling
-- ✅ Detailed business analytics
+- Customer management with VIP classification system
+- Inventory management and import/export operations
+- Product catalog and manufacturer management
+- Diverse promotion system (Flash, Combo, Member)
+- Order processing and payment handling
+- Detailed business analytics
 
 ---
 
-## ⚡ Key Highlights
-
-### 🎖️ **Advanced VIP Classification System**
-- Multi-tier customer classification: Member, Copper, Silver, Gold, Platinum, Diamond
-- Automatic loyalty point tracking and reward redemption
-- Birthday voucher distribution system
-- Customer segmentation for targeted promotions
-
-### 🛍️ **Comprehensive Inventory Management**
-- Real-time stock tracking and inventory monitoring
-- Automatic reordering when stock falls below threshold
-- Import/Export operations with full audit trail
-- Maximum product quantity (SLSPTD) validation
-- Goods receipt and purchase order management
-
-### 💰 **Flexible Promotion Engine**
-- **Flash Sale:** Time-limited discounts on specific products
-- **Combo Offers:** Multi-product bundled discounts
-- **Member Exclusive:** Loyalty tier-based promotions
-- Promotion quantity and time period controls
-- Automatic discount calculation and application
-
-### 📊 **Business Intelligence & Analytics**
-- Real-time sales dashboard and revenue tracking
-- Customer purchase behavior analysis
-- Daily sales and revenue statistics
-- Product performance metrics
-- Customer lifecycle insights
-
-### 🔒 **Enterprise-Grade Data Integrity**
-- ACID-compliant transaction management
-- Soft delete pattern for data recovery
-- Comprehensive foreign key relationships
-- Data validation and constraint enforcement
-- Concurrent access handling with proper locking strategies
-
-### 🏗️ **Well-Organized Architecture**
-- 13+ core database tables with relational integrity
-- 6 logical procedure modules for maintainability
-- Clear separation of concerns
-- Scalable and extensible design
-- Best practice SQL Server standards
-
----
-
-## 🏗️ System Architecture
+## System Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -93,7 +48,7 @@ The **Supermarket Management System (SMS)** is a comprehensive management applic
 
 ---
 
-## 📁 Directory Structure
+## Directory Structure
 
 ```
 CSC12003---Database-Management-Systems---Group-7/
@@ -130,50 +85,47 @@ CSC12003---Database-Management-Systems---Group-7/
 │   └── data.sql                  # Sample initialization data
 │
 ├── 04_Functions_and_Types/
-│   └── (Custom functions & types reference)
-│
-├── docs/
-│   └── (Detailed technical documentation)
+│   └── conflict 
 │
 └── README.md                     # This file
 ```
 
 ---
 
-## ⭐ Main Features
+## Main Features
 
-### 1. **Customer Management** 👥
+### 1. **Customer Management** 
 - Register new customers
 - Update customer information
 - VIP classification: Member, Copper, Silver, Gold, Platinum, Diamond
 - Loyalty points accumulation
 - Birthday gift vouchers
 
-### 2. **Product Management** 📦
+### 2. **Product Management** 
 - Add/Update products
 - Manage product categories
 - Manage manufacturers
 - Track inventory
 
-### 3. **Inventory Management** 🏪
+### 3. **Inventory Management** 
 - Import goods from suppliers
 - Automatic ordering when inventory is low
 - Check maximum product quantity (SLSPTD)
 - Manage import/order documents
 
-### 4. **Promotion System** 🎁
+### 4. **Promotion System** 
 - **Flash Sale**: Discount on specific products
 - **Combo**: Buy two products with discount
 - **Member**: Promotion by membership level
 - Monitor promotion quantity & duration
 
-### 5. **Order Processing** 📋
+### 5. **Order Processing** 
 - Add products to shopping carts
 - Calculate and apply discounts
 - Create invoices
 - Payment & statistics
 
-### 6. **Analytics & Reports** 📊
+### 6. **Analytics & Reports** 
 - Customer purchase statistics by date
 - Daily product sales list
 - Daily total revenue calculation
@@ -181,7 +133,7 @@ CSC12003---Database-Management-Systems---Group-7/
 
 ---
 
-## 🗄️ Database
+## Database
 
 ### Database Name
 ```
@@ -208,7 +160,7 @@ QLST (Supermarket Management System)
 
 ---
 
-## 🚀 Usage Guide
+## Usage Guide
 
 ### Step 1: Create Database
 
@@ -264,7 +216,7 @@ GO
 
 ---
 
-## 📐 Code Conventions
+## Code Conventions
 
 ### Naming Conventions
 
@@ -337,7 +289,7 @@ END CATCH
 
 ---
 
-## 🔐 Data Security
+## Data Security
 
 ### Soft Delete
 Tables use `DaXoa BIT DEFAULT 0` column to mark soft delete instead of physical deletion.
@@ -355,7 +307,7 @@ All critical operations are wrapped in transactions to ensure ACID properties.
 
 ---
 
-## 🧪 Testing & Validation
+## Testing & Validation
 
 ### Data Integrity Check
 ```sql
@@ -373,7 +325,7 @@ SELECT COUNT(*) FROM HOA_DON
 
 ---
 
-## 📝 References
+## References
 
 - **SQL Server Documentation:** https://docs.microsoft.com/en-us/sql/
 - **Transaction Isolation Levels:** https://learn.microsoft.com/en-us/sql/t-sql/statements/set-transaction-isolation-level-transact-sql
@@ -381,36 +333,26 @@ SELECT COUNT(*) FROM HOA_DON
 
 ---
 
-## 👥 Team Members - Group 7
+## Team Members - Group 7
 
-| Role | Name | Notes |
-|------|------|-------|
-| Team Lead | ... | ... |
-| Developer | ... | ... |
-| Database Designer | ... | ... |
-| Tester | ... | ... |
-
+| Role | Name |  
+|------|------|
+| Team Lead | Trần Minh Thư | 
+| Developer | Nguyễn Đức Mạnh |
+| Developer | Vũ Thái Phúc |
+| Developer | Lý Anh Quân |
+| Developer | Trần Tường Vĩ |
 ---
 
-## 📅 Update History
+## Update History
 
 | Version | Date | Content |
 |---------|------|---------|
 | v1.0 | 2024-12 | Initial version |
 | v1.1 | 2025-03 | Reorganized directory structure |
-| v1.2 | 2025-03 | Added documentation |
-
 ---
 
-## 📞 Contact & Support
-
-If you have any questions or issues, please contact the team via:
-- **Email:** group7@university.edu
-- **Classroom:** [Google Classroom Link]
-
----
-
-## 📄 License
+## License
 
 This project is developed for educational purposes.
 
